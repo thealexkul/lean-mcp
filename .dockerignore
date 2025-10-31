@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git (but keep .gitignore for Docker context)
+.git/
+
+# Documentation (keep README.md)
+*.md
+!README.md
+
+# Logs
+*.log
+logs/
+
+# Testing (none in production)
+tests/
+test_*.py
+*_test.py
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Environment
+.env
+.env.*
+
+# OS
+Thumbs.db
