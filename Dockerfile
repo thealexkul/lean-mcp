@@ -12,10 +12,16 @@ WORKDIR /app
 RUN useradd -m -u 1000 mcpuser && \
     chown -R mcpuser:mcpuser /app
 
+# Install system dependencies (curl for testing/debugging)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy dependencies first (for better layer caching)
 COPY --chown=mcpuser:mcpuser requirements.txt .
 
-# Install dependencies
+# Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 

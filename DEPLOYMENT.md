@@ -148,13 +148,14 @@ Then use `http://localhost:80` in your code.
 docker exec -it lean-mcp sh
 
 # Test connection to host
-# If using host.docker.internal:
-wget -O- http://host.docker.internal:80/your-endpoint
-# Or with curl:
+# curl is now included in the Docker image:
 curl http://host.docker.internal:80/your-endpoint
 
 # Test with your actual API endpoint
 curl http://host.docker.internal:80/your-api-path
+
+# Check curl version
+curl --version
 ```
 
 ### 2. Check Container Logs
