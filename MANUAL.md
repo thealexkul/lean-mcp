@@ -118,12 +118,17 @@ docker run -p 8888:8888 -e MCP_TRANSPORT=sse lean-mcp:latest
 
 ### 3. Advanced Docker Options
 
-**With custom model service URL**:
+**With custom model service URL** (accessing host at localhost:80):
 ```bash
 docker run -it \
-  -e MODEL_SERVICE_URL=http://host.docker.internal:8000 \
+  -e MODEL_SERVICE_URL=http://host.docker.internal:80 \
   lean-mcp
 ```
+
+**Important**: 
+- Use `host.docker.internal` (not `localhost`) to access host services from Docker
+- Always include `http://` prefix (httpx requires it)
+- Port 80 requires explicit port number: `:80`
 
 **With host networking** (access localhost services directly):
 ```bash

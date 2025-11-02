@@ -142,12 +142,14 @@ docker run -it lean-mcp
 docker run -p 8888:8888 -e MCP_TRANSPORT=sse lean-mcp
 ```
 
-**With custom model service**:
+**With custom model service** (accessing host services):
 ```bash
 docker run -it \
-  -e MODEL_SERVICE_URL=http://host.docker.internal:8000 \
+  -e MODEL_SERVICE_URL=http://host.docker.internal:80 \
   lean-mcp
 ```
+
+**Note**: Use `host.docker.internal` instead of `localhost` when accessing services on your host machine from inside Docker. Always include `http://` prefix.
 
 **With host networking** (access localhost services):
 ```bash
