@@ -5,12 +5,13 @@ Example tool that makes REST API calls and returns string responses for LM Studi
 import os
 import logging
 import httpx
+import json
 from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 # Configuration
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:80")
+API_BASE_URL = os.getenv("API_BASE_URL", "http://mymachine.cec.net:80")
 TIMEOUT = int(os.getenv("API_TIMEOUT", "30"))
 
 # Create reusable HTTP client
@@ -67,7 +68,6 @@ def register_tools(mcp_instance):
             try:
                 data = response.json()
                 # Format JSON nicely for display
-                import json
                 formatted = json.dumps(data, indent=2)
                 logger.info("API call successful - returned JSON")
                 return f"API Response:\n{formatted}"
@@ -99,128 +99,109 @@ def register_tools(mcp_instance):
             error_msg = f"Unexpected error: {str(e)}"
             logger.error("API unexpected error: %s", error_msg)
             return f"Error: {error_msg}"
-
-
+   
     @mcp_instance.tool()
-    def call_api_with_body(endpoint: str, body: str, method: str = "POST") -> str:
+    def get_chassis() -> str:
         """
-        Call a REST API endpoint with a request body and return the response.
+        Get chassis information from iDRAC API.
         
-        This tool sends JSON data to your API endpoint and returns the response
-        as a formatted string.
-        
-        Args:
-            endpoint: The API endpoint path (e.g., "/api/users")
-            body: JSON string to send in the request body
-            method: HTTP method - POST or PUT (default: POST)
+        Retrieves detailed chassis information including hardware status,
+        power state, model, serial number, and other chassis-level data
+        from the /idrac/v1/Chassis endpoint.
         
         Returns:
-            String containing the API response or error message
+            Formatted JSON string with chassis information, or error message
         
-        Example:
-            call_api_with_body("/api/users", '{"name": "John"}') -> "User created"
+        Example response:
+            {
+              "Id": "System.Embedded.1",
+              "Name": "System Chassis",
+              "ChassisType": "RackMount",
+              "PowerState": "On",
+              "Status": {
+                "State": "Enabled",
+                "Health": "OK"
+              }
+            }
         """
-        # Normalize endpoint
-        if not endpoint.startswith("/"):
-            endpoint = "/" + endpoint
-        
+        endpoint = "/idrac/v1/Chassis"
         full_url = f"{API_BASE_URL}{endpoint}"
-        method = method.upper()
         
-        if method not in ["POST", "PUT", "PATCH"]:
-            return f"Error: Method '{method}' not supported with body. Use POST, PUT, or PATCH."
-        
-        logger.info("Calling API with body: %s %s", method, full_url)
+        logger.info("=" * 60)
+        logger.info("get_chassis() called")
+        logger.info("  API_BASE_URL: %s", API_BASE_URL)
+        logger.info("  Endpoint: %s", endpoint)
+        logger.info("  Full URL: %s", full_url)
+        logger.info("  Timeout: %s seconds", TIMEOUT)
         
         try:
-            # Parse body as JSON
-            import json
-            try:
-                body_data = json.loads(body)
-            except json.JSONDecodeError as e:
-                return f"Error: Invalid JSON in body: {str(e)}"
+            logger.info("Making GET request to %s", full_url)
+            response = http_client.get(full_url, timeout=TIMEOUT)
             
-            # Make request
-            if method == "POST":
-                response = http_client.post(full_url, json=body_data)
-            elif method == "PUT":
-                response = http_client.put(full_url, json=body_data)
-            elif method == "PATCH":
-                response = http_client.patch(full_url, json=body_data)
+            logger.info("Response received - Status: %s", response.status_code)
+            logger.info("Response headers: %s", dict(response.headers))
             
             response.raise_for_status()
             
-            # Format response
-            try:
-                data = response.json()
-                formatted = json.dumps(data, indent=2)
-                logger.info("API call with body successful")
-                return f"API Response:\n{formatted}"
-            except (ValueError, TypeError):
-                text_response = response.text.strip()
-                if text_response:
-                    return f"API Response:\n{text_response}"
-                else:
-                    return f"API Response: (empty) HTTP {response.status_code}"
+            logger.info("Parsing response as JSON...")
+            data = response.json()
+            logger.info("JSON parsed successfully, keys: %s", list(data.keys()) if isinstance(data, dict) else "Not a dict")
+            
+            logger.info("Formatting JSON with indent=2...")
+            formatted = json.dumps(data, indent=2)
+            logger.info("JSON formatted, length: %d characters", len(formatted))
+            
+            logger.info("Successfully retrieved chassis information")
+            logger.info("=" * 60)
+            return f"Chassis Information:\n{formatted}"
         
-        except httpx.TimeoutException:
+        except httpx.TimeoutException as e:
             error_msg = f"Request timed out after {TIMEOUT} seconds"
-            logger.error("API timeout: %s", error_msg)
-            return f"Error: {error_msg}"
+            logger.error("=" * 60)
+            logger.error("Chassis API timeout")
+            logger.error("  URL: %s", full_url)
+            logger.error("  Error: %s", str(e))
+            logger.error("=" * 60)
+            return f"Error: {error_msg}\nEndpoint: {full_url}"
         
         except httpx.HTTPStatusError as e:
-            error_msg = f"HTTP {e.response.status_code}: {e.response.text[:200]}"
-            logger.error("API HTTP error: %s", error_msg)
-            return f"Error: {error_msg}"
+            error_msg = f"HTTP {e.response.status_code}"
+            error_detail = e.response.text[:500] if e.response.text else "No details"
+            logger.error("=" * 60)
+            logger.error("Chassis API HTTP error")
+            logger.error("  URL: %s", full_url)
+            logger.error("  Status: %s", e.response.status_code)
+            logger.error("  Response text (first 500 chars): %s", error_detail)
+            logger.error("=" * 60)
+            return f"Error: {error_msg}\nEndpoint: {full_url}\nDetails: {error_detail}"
         
         except httpx.RequestError as e:
             error_msg = f"Connection failed: {str(e)}"
-            logger.error("API connection error: %s", error_msg)
-            return f"Error: {error_msg}"
+            logger.error("=" * 60)
+            logger.error("Chassis API connection error")
+            logger.error("  URL: %s", full_url)
+            logger.error("  Error type: %s", type(e).__name__)
+            logger.error("  Error: %s", str(e))
+            logger.error("=" * 60)
+            return f"Error: {error_msg}\nEndpoint: {full_url}"
+        
+        except json.JSONDecodeError as e:
+            error_msg = f"Invalid JSON response: {str(e)}"
+            logger.error("=" * 60)
+            logger.error("Chassis API JSON decode error")
+            logger.error("  URL: %s", full_url)
+            logger.error("  Response text (first 500 chars): %s", response.text[:500] if 'response' in locals() else "No response")
+            logger.error("  JSON Error: %s", str(e))
+            logger.error("=" * 60)
+            return f"Error: {error_msg}\nEndpoint: {full_url}"
         
         except Exception as e:
             error_msg = f"Unexpected error: {str(e)}"
-            logger.error("API unexpected error: %s", error_msg)
-            return f"Error: {error_msg}"
-
-
-    @mcp_instance.tool()
-    def check_api_health() -> str:
-        """
-        Check if the API service is available and responding.
-        
-        This is a simple health check that tries to reach your API service
-        and returns a status message.
-        
-        Returns:
-            String with health status
-        
-        Example:
-            check_api_health() -> "API is healthy and responding"
-        """
-        logger.info("Checking API health at %s", API_BASE_URL)
-        
-        try:
-            # Try a simple GET request (you might want to use a specific health endpoint)
-            response = http_client.get(API_BASE_URL, timeout=5)
-            
-            if response.status_code == 200:
-                status = "healthy and responding"
-            else:
-                status = f"responding with HTTP {response.status_code}"
-            
-            logger.info("API health check: %s", status)
-            return f"API at {API_BASE_URL} is {status}"
-        
-        except httpx.TimeoutException:
-            logger.error("API health check timed out")
-            return f"Error: API at {API_BASE_URL} is not responding (timeout)"
-        
-        except httpx.RequestError as e:
-            logger.error("API health check failed: %s", str(e))
-            return f"Error: Cannot reach API at {API_BASE_URL} - {str(e)}"
-        
-        except Exception as e:
-            logger.error("API health check error: %s", str(e))
-            return f"Error: {str(e)}"
-
+            logger.error("=" * 60)
+            logger.error("Chassis API unexpected error")
+            logger.error("  URL: %s", full_url)
+            logger.error("  Error type: %s", type(e).__name__)
+            logger.error("  Error: %s", str(e))
+            logger.error("  Traceback:", exc_info=True)
+            logger.error("=" * 60)
+            return f"Error: {error_msg}\nEndpoint: {full_url}"
