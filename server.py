@@ -24,6 +24,11 @@ try:
     from tools import models
     models.register_tools(mcp)
     logger.info("Loaded model service tools")
+    
+    # Load example API tools
+    from tools import api_example
+    api_example.register_tools(mcp)
+    logger.info("Loaded API example tools")
 except Exception as e:
     logger.error("Failed to load tools: %s", e)
     sys.exit(1)

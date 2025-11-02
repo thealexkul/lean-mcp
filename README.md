@@ -84,15 +84,24 @@ MCP_TRANSPORT=sse python server.py
 
 ## Available Tools
 
+### Model Service Tools
 1. **get_available_models()** - List available models from model service
 2. **get_model_details(model_id)** - Get details for specific model
 3. **check_model_service_health()** - Check model service status
+
+### REST API Tools (String Response)
+4. **call_api_endpoint(endpoint, method)** - Call REST API and return response as string
+5. **call_api_with_body(endpoint, body, method)** - Call API with JSON body, return string response
+6. **check_api_health()** - Check if API service is available
+
+The REST API tools return formatted strings that LM Studio can easily consume and display.
 
 ## Adding New Tools
 
 1. Create a new file in `tools/` (e.g., `tools/database.py`)
 2. Define tools with the registration function pattern:
 
+**For dictionary responses:**
 ```python
 def register_tools(mcp_instance):
     @mcp_instance.tool()
@@ -102,12 +111,24 @@ def register_tools(mcp_instance):
         return {"result": "data"}
 ```
 
+**For string responses (easier for LM Studio to display):**
+```python
+def register_tools(mcp_instance):
+    @mcp_instance.tool()
+    def your_tool_name(param: str) -> str:
+        """Tool description for AI"""
+        # Your implementation - return formatted string
+        return f"Result: {data}"
+```
+
 3. Import and register in `server.py`:
 
 ```python
 from tools import database
 database.register_tools(mcp)
 ```
+
+**See `tools/api_example.py` for complete examples** of REST API tools that return strings.
 
 ## Configuration
 
@@ -119,6 +140,7 @@ Environment variables:
 | `MCP_PORT` | `8888` | Port for SSE transport |
 | `MCP_HOST` | `0.0.0.0` | Host binding for SSE transport |
 | `MODEL_SERVICE_URL` | `http://localhost:8000` | Model service API URL |
+| `API_BASE_URL` | `http://localhost:80` | Base URL for REST API tools |
 | `API_TIMEOUT` | `30` | API request timeout (seconds) |
 | `LOG_LEVEL` | `INFO` | Logging level |
 
