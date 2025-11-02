@@ -89,12 +89,18 @@ MCP_TRANSPORT=sse python server.py
 2. **get_model_details(model_id)** - Get details for specific model
 3. **check_model_service_health()** - Check model service status
 
-### REST API Tools (String Response)
-4. **call_api_endpoint(endpoint, method)** - Call REST API and return response as string
-5. **call_api_with_body(endpoint, body, method)** - Call API with JSON body, return string response
-6. **check_api_health()** - Check if API service is available
+### iDRAC/Specific API Tools (Formatted JSON Strings)
+4. **get_chassis()** - Get chassis information (hardware, power state, status)
+5. **get_system_info()** - Get system details (model, CPU, memory, BIOS)
+6. **get_thermal_info()** - Get temperature and fan information
+7. **get_power_info()** - Get power supply and consumption data
 
-The REST API tools return formatted strings that LM Studio can easily consume and display.
+### Generic REST API Tools
+8. **call_api_endpoint(endpoint, method)** - Call any REST API endpoint
+9. **call_api_with_body(endpoint, body, method)** - Call API with JSON body
+10. **check_api_health()** - Check if API service is available
+
+All tools return formatted strings optimized for LM Studio consumption.
 
 ## Adding New Tools
 
@@ -140,7 +146,8 @@ Environment variables:
 | `MCP_PORT` | `8888` | Port for SSE transport |
 | `MCP_HOST` | `0.0.0.0` | Host binding for SSE transport |
 | `MODEL_SERVICE_URL` | `http://localhost:8000` | Model service API URL |
-| `API_BASE_URL` | `http://localhost:80` | Base URL for REST API tools |
+| `API_BASE_URL` | `http://localhost:80` | Base URL for generic REST API tools |
+| `IDRAC_BASE_URL` | `http://localhost:80` | Base URL for iDRAC/specific API tools |
 | `API_TIMEOUT` | `30` | API request timeout (seconds) |
 | `LOG_LEVEL` | `INFO` | Logging level |
 
